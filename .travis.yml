@@ -1,0 +1,10 @@
+language: clojure
+lein: lein2
+script: script/deploy.sh
+env:
+  global:
+    secure: "BD2m3G7mUqO3Rl8EOQ+XqjtIYTAt0I28kITudhMorrWnupCTL1Uy2Ya25hUjuXjzVUi+CZf8/XTCOAhqufdnvhX7BBiAS5WXWTXH3htJ2TUXq6O5dyrUCONccGClVsxYYWiTJc2syPUnYgk7o0kiT8rbgzDHFSJbJNIfux+NSoQ="
+before_script:
+  - git config --global user.email "travis@travis-ci.org"
+  - git config --global user.name "travis-ci"
+  - chmod +x script/deploy.sh

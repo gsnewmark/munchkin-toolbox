@@ -3,6 +3,7 @@
   (:require [net.cgrand.enlive-html :as enlive]
             [compojure.route :refer (resources)]
             [compojure.core :refer (GET defroutes)]
+            [ring.middleware.resource :refer [wrap-resource]]
             [ring.adapter.jetty :as jetty]
             [clojure.java.io :as io]))
 
@@ -15,9 +16,13 @@
   (resources "/")
   (GET "/*" req (page)))
 
+(def app
+  (-> site
+      (wrap-resource "META-INF/resources")))
+
 (defn run
   "Run the ring server. It defines the server symbol with defonce."
   []
   (defonce server
-    (jetty/run-jetty #'site {:port 3000 :join? false}))
+    (jetty/run-jetty #'app {:port 3000 :join? false}))
   server)

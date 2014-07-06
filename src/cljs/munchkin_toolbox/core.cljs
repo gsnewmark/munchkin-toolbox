@@ -102,7 +102,7 @@
           [:button
            {:class "btn btn-default"
             :on-click #(put! player-added-c true)}
-           "Add player"]])))))
+           "Add a new player"]])))))
 
 
 (defn app

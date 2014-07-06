@@ -8,7 +8,7 @@ if [ "$TRAVIS_BRANCH" == "master" ]; then
   lein2 with-profile prod do clean, compile
 
   git checkout gh-pages
-  cp target/cljsbuild/public/js/munchkin-toolbox.js js/munchkin-toolbox.js
+  cp resources/js/munchkin-toolbox.js js/munchkin-toolbox.js
   git add js/munchkin-toolbox.js
   git commit -m 'Deploy to Github Pages'
 

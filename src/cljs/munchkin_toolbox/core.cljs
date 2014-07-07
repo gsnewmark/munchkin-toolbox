@@ -30,10 +30,15 @@
             {:class "btn btn-success btn-lg btn-block"
              :on-click #(put! level-changed-c ::dec)}
             "-"]]
-          [:div {:class "col-sm-2"}
-           [:span
-            {:class "btn btn-info btn-lg btn-block" :disabled "disabled"}
-            level]]
+          [:div {:class "col-sm-8"}
+           [:div {:class "progress"}
+            [:div {:class "progress-bar"
+                   :role "progressbar"
+                   :aria-valuenow level
+                   :aria-valuemin "0"
+                   :aria-valuemax "10"
+                   :style {:width (str (* level 10) "%")}}
+             level]]]
           [:div {:class "col-sm-2"}
            [:button
             {:class "btn btn-danger btn-lg btn-block"

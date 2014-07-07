@@ -27,7 +27,7 @@
          [:div {:class "row"}
           [:div {:class "col-sm-2"}
            [:button
-            {:class "btn btn-success btn-lg btn-block"
+            {:class "btn btn-danger btn-lg btn-block"
              :on-click #(put! level-changed-c ::dec)}
             "-"]]
           [:div {:class "col-sm-8"}
@@ -41,7 +41,7 @@
              level]]]
           [:div {:class "col-sm-2"}
            [:button
-            {:class "btn btn-danger btn-lg btn-block"
+            {:class "btn btn-success btn-lg btn-block"
              :on-click #(put! level-changed-c ::inc)}
             "+"]]])))))
 
@@ -66,7 +66,9 @@
     (render-state [_ state]
       (html
        [:div {:class "row"}
-        [:div {:class "row"} name]
+        [:div {:class "row"}
+         [:div {:class "col-sm-12"}
+          name]]
         (om/build level-counter
                   level
                   {:init-state (select-keys state [:level-changed])})
@@ -80,7 +82,8 @@
     (render [_]
       (html
        [:div {:class "row"}
-        (om/build-all player-info (get data :players []))]))))
+        [:div {:class "col-sm-12"}
+         (om/build-all player-info (get data :players []))]]))))
 
 
 (defn control-panel
@@ -104,10 +107,11 @@
       (let [player-added-c (:player-added state)]
         (html
          [:div {:class "row"}
-          [:button
-           {:class "btn btn-default"
-            :on-click #(put! player-added-c true)}
-           "Add a new player"]])))))
+          [:div {:class "col-sm-12"}
+           [:button
+            {:class "btn btn-default"
+             :on-click #(put! player-added-c true)}
+            "Add a new player"]]])))))
 
 
 (defn app
@@ -116,7 +120,7 @@
     om/IRender
     (render [_]
       (html
-       [:div {:class "container"}
+       [:div {:class "container-fluid"}
         (om/build control-panel data)
         (om/build players-list data)]))))
 

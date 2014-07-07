@@ -45,6 +45,46 @@
              :on-click #(put! level-changed-c ::inc)}
             "+"]]])))))
 
+(defn editable-label
+  [label-key]
+  (fn [data owner]
+    (reify
+      om/IInitState
+      (init-state [_]
+        {:edit? false
+         :label-changed (chan)})
+      om/IWillMount
+      (will-mount [_]
+        (let [label-changed-c (om/get-state owner :label-changed)]
+          (go (loop []
+                (let [name (<! label-changed-c)]
+                  (om/update! data label-key name)
+                  (om/set-state! owner :edit? false)
+                  (recur))))))
+      om/IRenderState
+      (render-state [_ state]
+        (let [{:keys [edit? label label-changed]} state
+              label (or label (get data label-key ""))]
+          (html
+           [:div {:class "row"}
+            [:div {:class "col-sm-12"}
+             (if edit?
+               [:div {:class "form-inline" :role "form"}
+                [:input
+                 {:type "text"
+                  :class "form-control"
+                  :placeholder "Player's name"
+                  :on-change
+                  #(om/set-state! owner :label (.. % -target -value))
+                  :value label}]
+                [:button
+                 {:class "btn btn-warning"
+                  :on-click #(put! label-changed label)}
+                 "Save"]]
+               [:label
+                {:on-click #(om/set-state! owner :edit? true)}
+                (get data label-key "")])]]))))))
+
 (defmulti change-level identity)
 (defmethod change-level ::inc [op] (fn [l] (if (< l 10) (inc l) l)))
 (defmethod change-level ::dec [op] (fn [l] (if (> l 1) (dec l) l)))
@@ -54,7 +94,8 @@
   [{:keys [name level] :as player} owner]
   (reify
     om/IInitState
-    (init-state [_] {:level-changed (chan)})
+    (init-state [_]
+      {:level-changed (chan)})
     om/IWillMount
     (will-mount [_]
       (let [level-changed-c (om/get-state owner :level-changed)]
@@ -66,9 +107,7 @@
     (render-state [_ state]
       (html
        [:div {:class "row"}
-        [:div {:class "row"}
-         [:div {:class "col-sm-12"}
-          name]]
+        (om/build (editable-label :name) player)
         (om/build level-counter
                   level
                   {:init-state (select-keys state [:level-changed])})
@@ -109,7 +148,7 @@
          [:div {:class "row"}
           [:div {:class "col-sm-12"}
            [:button
-            {:class "btn btn-default"
+            {:class "btn btn-info"
              :on-click #(put! player-added-c true)}
             "Add a new player"]]])))))
 

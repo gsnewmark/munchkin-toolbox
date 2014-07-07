@@ -82,7 +82,8 @@
                   :on-click #(put! label-changed label)}
                  "Save"]]
                [:label
-                {:on-click #(om/set-state! owner :edit? true)}
+                {:style {:cursor "pointer"}
+                 :on-click #(om/set-state! owner :edit? true)}
                 (get data label-key "")])]]))))))
 
 (defmulti change-level identity)

@@ -177,27 +177,41 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:player-added (chan)})
+      {:player-added (chan)
+       :player-reset (chan)})
     om/IWillMount
     (will-mount [_]
-      (let [player-added-c (om/get-state owner :player-added)]
+      (let [player-added-c (om/get-state owner :player-added)
+            player-reset-c (om/get-state owner :player-reset)]
         (go (loop []
-              (let [op (<! player-added-c)]
-                (om/transact! data :players
-                              (fn [p]
-                                (let [n (inc (count p))]
-                                  (conj p (default-player n)))))
-                (recur))))))
+              (alt!
+                player-added-c
+                ([op] (om/transact! data :players
+                                    (fn [p]
+                                      (let [n (inc (count p))]
+                                        (conj p (default-player n))))))
+                player-reset-c
+                ([op]
+                 (let [new-player-data (dissoc (default-player 0) :name)]
+                   (om/transact! data :players
+                                 (fn [p] (mapv #(merge % new-player-data) p))))))
+              (recur)))))
     om/IRenderState
     (render-state [_ state]
-      (let [player-added-c (:player-added state)]
+      (let [player-added-c (:player-added state)
+            player-reset-c (:player-reset state)]
         (html
          [:div {:class "row"}
-          [:div {:class "col-sm-12"}
+          [:div {:class "col-sm-2"}
            [:button
             {:class "btn btn-info"
              :on-click #(put! player-added-c true)}
-            "Add a new player"]]])))))
+            "Add a new player"]]
+          [:div {:class "col-sm-2"}
+           [:button
+            {:class "btn btn-danger"
+             :on-click #(put! player-reset-c true)}
+            "Reset player stats"]]])))))
 
 
 (defn app

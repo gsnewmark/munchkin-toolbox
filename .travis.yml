@@ -6,6 +6,8 @@ env:
 before_install:
   - wget https://github.com/boot-clj/boot/releases/download/2.0.0/boot.sh
   - mv boot.sh boot && chmod a+x boot && sudo mv boot /usr/local/bin
+install:
+  - echo "do nothing"
 before_script:
   - git config --global user.email "travis@travis-ci.org"
   - git config --global user.name "travis-ci"

@@ -1,6 +1,6 @@
 (ns munchkin-toolbox.core
   (:require-macros [cljs.core.async.macros :refer [go alt!]])
-  (:require [om.core :as om :include-macros true]
+  (:require [om.core :as om]
             [cljs.core.async :refer [put! chan <!]]
             [sablono.core :as html :refer-macros [html]]))
 
@@ -13,7 +13,7 @@
    :level 1
    :strength 0})
 
-(def app-state
+(defonce app-state
   (atom {:players (mapv default-player (range 1 4))}))
 
 
@@ -225,7 +225,8 @@
         (om/build players-list data)]))))
 
 
-(when-let [dom-el (.getElementById js/document "app")]
-  (om/root app
-           app-state
-           {:target dom-el}))
+(defn start []
+  (when-let [dom-el (.getElementById js/document "app")]
+    (om/root app
+             app-state
+             {:target dom-el})))

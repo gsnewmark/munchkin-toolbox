@@ -5,10 +5,10 @@ if [ "$TRAVIS_BRANCH" == "master" ]; then
   git clone --quiet https://${GH_TOKEN}@github.com/gsnewmark/munchkin-toolbox > /dev/null
 
   cd munchkin-toolbox
-  lein2 with-profile prod do clean, compile
+  boot build
 
   git checkout gh-pages
-  cp resources/js/munchkin-toolbox.js js/munchkin-toolbox.js
+  cp target/js/munchkin-toolbox.js js/munchkin-toolbox.js
   git add js/munchkin-toolbox.js
   git commit -m 'Deploy to Github Pages'
 

@@ -1,0 +1,19 @@
+.level, .strength, .uk-panel-title {
+  font-family: "Ledger";
+  color: #270b00;
+}
+
+.strength {
+  font-size: 48px;
+}
+
+.card {
+  background-color: #e7daa7;
+  border-color: #270b00;
+  border-style: solid;
+  border-width: medium;
+}
+
+.editable {
+  cursor: pointer;
+}

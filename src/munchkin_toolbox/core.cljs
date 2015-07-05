@@ -25,26 +25,22 @@
     (render-state [_ state]
       (let [level-changed-c (:level-changed state)]
         (html
-         [:div {:class "row"}
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-danger btn-lg btn-block"
-             :on-click #(put! level-changed-c ::dec)}
-            [:i {:class "glyphicon glyphicon-chevron-down"}]]]
-          [:div {:class "col-sm-8"}
-           [:div {:class "progress"}
-            [:div {:class "progress-bar"
-                   :role "progressbar"
-                   :aria-valuenow level
-                   :aria-valuemin "0"
-                   :aria-valuemax "10"
+         [:div.uk-grid
+          [:div.uk-width-1-10
+           [:a
+            {:class "uk-icon-arrow-down uk-text-danger uk-icon-hover uk-icon-small"
+             :type "button"
+             :on-click #(put! level-changed-c ::dec)}]]
+          [:div.uk-width-8-10
+           [:div.uk-progress.uk-progress-warning
+            [:div {:class "uk-progress-bar"
                    :style {:width (str (* level 10) "%")}}
-             level]]]
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-success btn-lg btn-block"
-             :on-click #(put! level-changed-c ::inc)}
-            [:i {:class "glyphicon glyphicon-chevron-up"}]]]])))))
+             [:span.level.uk-text-large level]]]]
+          [:div.uk-width-1-10
+           [:a
+            {:class "uk-icon-arrow-up uk-text-success uk-icon-hover uk-icon-small"
+             :type "button"
+             :on-click #(put! level-changed-c ::inc)}]]])))))
 
 (defn strength-indicator
   "Editable strength indicator."
@@ -55,26 +51,16 @@
       (let [strength-changed-c (:strength-changed state)
             strength (max (+ (:level player) (:strength player)) 1)]
         (html
-         [:div {:class "row"}
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-info btn-lg btn-block"
-             :on-click #(put! strength-changed-c ::dec)}
-            "-"]]
-          [:div {:class "col-sm-8"}
-           [:div {:class "progress"}
-            [:div {:class "progress-bar progress-bar-warning"
-                   :role "progressbar"
-                   :aria-valuenow strength
-                   :aria-valuemin "0"
-                   :aria-valuemax "50"
-                   :style {:width (str (* strength 2) "%")}}
-             strength]]]
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-info btn-lg btn-block"
-             :on-click #(put! strength-changed-c ::inc)}
-            "+"]]])))))
+         [:div.uk-grid
+          [:a
+           {:class "uk-width-1-3 uk-icon-minus uk-text-danger uk-icon-hover uk-icon-medium"
+            :type "button"
+            :on-click #(put! strength-changed-c ::dec)}]
+          [:span.strength.uk-width-1-3 strength]
+          [:a
+           {:class "uk-width-1-3 uk-icon-plus uk-text-success uk-icon-hover uk-icon-medium"
+            :type "button"
+            :on-click #(put! strength-changed-c ::inc)}]])))))
 
 (defn editable-label
   [label-key]
@@ -97,25 +83,24 @@
         (let [{:keys [edit? label label-changed]} state
               label (or label (get data label-key ""))]
           (html
-           [:div {:class "row"}
-            [:div {:class "col-sm-12"}
-             (if edit?
-               [:div {:class "form-inline" :role "form"}
-                [:input
-                 {:type "text"
-                  :class "form-control"
-                  :placeholder "Player's name"
-                  :on-change
-                  #(om/set-state! owner :label (.. % -target -value))
-                  :value label}]
-                [:button
-                 {:class "btn btn-warning"
-                  :on-click #(put! label-changed label)}
-                 "Save"]]
-               [:label
-                {:style {:cursor "pointer"}
-                 :on-click #(om/set-state! owner :edit? true)}
-                (get data label-key "")])]]))))))
+           (if edit?
+             [:form.uk-form
+              [:fieldset {:data-uk-margin ""}
+               [:input
+                {:type "text"
+                 :placeholder "Player's name"
+                 :on-change
+                 #(om/set-state! owner :label (.. % -target -value))
+                 :value label}]
+               " "
+               [:button
+                {:class "uk-button uk-button-primary"
+                 :type "button"
+                 :on-click #(put! label-changed label)}
+                "Save"]]]
+             [:label.editable
+              {:on-click #(om/set-state! owner :edit? true)}
+              (get data label-key "")])))))))
 
 (defmulti change-level identity)
 (defmethod change-level ::inc [op] (fn [l] (if (< l 10) (inc l) l)))
@@ -126,7 +111,7 @@
 (defmethod change-strength ::dec [op] (fn [s] (if (> s 0) (dec s) s)))
 
 (defn player-info
-  "Row with info about the player."
+  "Card with info about the player."
   [{:keys [name level] :as player} owner]
   (reify
     om/IInitState
@@ -148,17 +133,20 @@
     om/IRenderState
     (render-state [_ state]
       (html
-       [:div {:class "row"}
-        (om/build (editable-label :name) player)
-        [:h4 "Level"]
-        (om/build level-counter
-                  level
-                  {:init-state (select-keys state [:level-changed])})
-        [:h4 "Strength"]
-        (om/build strength-indicator
-                  player
-                  {:init-state (select-keys state [:strength-changed])})
-        [:hr]]))))
+       [:div.uk-width-medium-1-3.uk-width-small-1-2.uk-grid-margin
+        [:div.card.uk-panel.uk-panel-box
+         [:h3.uk-panel-title
+          (om/build (editable-label :name) player)]
+         (when (>= level 10)
+           [:div.uk-panel-badge [:i.uk-text-warning.uk-icon-trophy.uk-icon-medium]])
+         (om/build level-counter
+                   level
+                   {:init-state (select-keys state [:level-changed])})
+         [:hr]
+         [:div.uk-text-center
+          (om/build strength-indicator
+                    player
+                    {:init-state (select-keys state [:strength-changed])})]]]))))
 
 (defn players-list
   "List of players' info."
@@ -167,9 +155,8 @@
     om/IRender
     (render [_]
       (html
-       [:div {:class "row"}
-        [:div {:class "col-sm-12"}
-         (om/build-all player-info (get data :players []))]]))))
+       [:div.uk-grid
+        (om/build-all player-info (get data :players []) {:key :name})]))))
 
 
 (defn control-panel
@@ -201,17 +188,18 @@
       (let [player-added-c (:player-added state)
             player-reset-c (:player-reset state)]
         (html
-         [:div {:class "row"}
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-info"
-             :on-click #(put! player-added-c true)}
-            "Add a new player"]]
-          [:div {:class "col-sm-2"}
-           [:button
-            {:class "btn btn-danger"
-             :on-click #(put! player-reset-c true)}
-            "Reset player stats"]]])))))
+         [:nav.uk-navbar
+          [:button
+           {:class "uk-button uk-button-success"
+            :type "button"
+            :on-click #(put! player-added-c true)}
+           "Add a new player"]
+          " "
+          [:button
+           {:class "uk-button uk-button-danger"
+            :type "button"
+            :on-click #(put! player-reset-c true)}
+           "Reset player stats"]])))))
 
 
 (defn app
@@ -220,7 +208,7 @@
     om/IRender
     (render [_]
       (html
-       [:div {:class "container-fluid"}
+       [:div
         (om/build control-panel data)
         (om/build players-list data)]))))
 

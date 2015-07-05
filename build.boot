@@ -1,6 +1,6 @@
 (task-options!
   pom {:project     'munchkin-toolbox
-       :version     "0.2.0-SNAPSHOT"
+       :version     "0.3.0-SNAPSHOT"
        :description "A set of tools for the Munchkin game"
        :url         "https://gsnewmark.github.io/munchkin-toolbox"
        :scm         {:url "https://github.com/gsnewmark/munchkin-toolbox"}
@@ -15,7 +15,7 @@
                   [org.clojure/core.async    "0.1.346.0-17112a-alpha"]
                   [org.omcljs/om             "0.8.8"]
                   [sablono                   "0.3.4"]
-                  [org.webjars/bootstrap     "3.3.5"]
+                  [org.webjars/uikit         "2.20.3"]
 
                   [adzerk/boot-cljs      "0.0-3308-0"      :scope "test"]
                   [adzerk/boot-reload    "0.3.1"           :scope "test"]

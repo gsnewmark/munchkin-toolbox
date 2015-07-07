@@ -159,17 +159,28 @@
         (om/build-all player-info (get data :players []) {:key :name})]))))
 
 
+(defn- reset-players
+  [players]
+  (let [new-player-data (dissoc (default-player 0) :name)]
+    (mapv #(merge % new-player-data) players)))
+
+(def ^:private local-storage-key "players")
+
 (defn control-panel
   [data owner]
   (reify
     om/IInitState
     (init-state [_]
       {:player-added (chan)
-       :player-reset (chan)})
+       :player-reset (chan)
+       :player-save (chan)
+       :player-load (chan)})
     om/IWillMount
     (will-mount [_]
       (let [player-added-c (om/get-state owner :player-added)
-            player-reset-c (om/get-state owner :player-reset)]
+            player-reset-c (om/get-state owner :player-reset)
+            player-save-c (om/get-state owner :player-save)
+            player-load-c (om/get-state owner :player-load)]
         (go (loop []
               (alt!
                 player-added-c
@@ -179,14 +190,31 @@
                                         (conj p (default-player n))))))
                 player-reset-c
                 ([op]
-                 (let [new-player-data (dissoc (default-player 0) :name)]
-                   (om/transact! data :players
-                                 (fn [p] (mapv #(merge % new-player-data) p))))))
+                 (om/transact! data :players reset-players))
+
+                player-save-c
+                ([_]
+                 (let [players (->> @data
+                                    :players
+                                    reset-players
+                                    clj->js
+                                    (.stringify js/JSON))]
+                   (.setItem js/localStorage local-storage-key players)))
+
+                player-load-c
+                ([_]
+                 (when-let [players (-> js/localStorage
+                                        (.getItem local-storage-key)
+                                        (#(.parse js/JSON %))
+                                        (js->clj :keywordize-keys true))]
+                   (om/update! data :players players))))
               (recur)))))
     om/IRenderState
     (render-state [_ state]
       (let [player-added-c (:player-added state)
-            player-reset-c (:player-reset state)]
+            player-reset-c (:player-reset state)
+            player-save-c (:player-save state)
+            player-load-c (:player-load state)]
         (html
          [:nav.uk-navbar
           [:button
@@ -199,7 +227,19 @@
            {:class "uk-button uk-button-danger"
             :type "button"
             :on-click #(put! player-reset-c true)}
-           "Reset player stats"]])))))
+           "Reset player stats"]
+          [:div.uk-navbar-flip
+           [:button
+            {:class "uk-button uk-button-primary"
+             :type "button"
+             :on-click #(put! player-save-c true)}
+            "Save players"]
+           " "
+           [:button
+            {:class "uk-button uk-button-danger"
+             :type "button"
+             :on-click #(put! player-load-c true)}
+            "Load players"]]])))))
 
 
 (defn app

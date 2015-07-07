@@ -13,8 +13,17 @@
    :level 1
    :strength 0})
 
+(def ^:private local-storage-key "players")
+
+(defn- load-players []
+  (-> js/localStorage
+      (.getItem local-storage-key)
+      (#(.parse js/JSON %))
+      (js->clj :keywordize-keys true)))
+
 (defonce app-state
-  (atom {:players (mapv default-player (range 1 4))}))
+  (atom
+   {:players (or (load-players) (mapv default-player (range 1 4)))}))
 
 
 (defn level-counter
@@ -164,8 +173,6 @@
   (let [new-player-data (dissoc (default-player 0) :name)]
     (mapv #(merge % new-player-data) players)))
 
-(def ^:private local-storage-key "players")
-
 (defn control-panel
   [data owner]
   (reify
@@ -203,10 +210,7 @@
 
                 player-load-c
                 ([_]
-                 (when-let [players (-> js/localStorage
-                                        (.getItem local-storage-key)
-                                        (#(.parse js/JSON %))
-                                        (js->clj :keywordize-keys true))]
+                 (when-let [players (load-players)]
                    (om/update! data :players players))))
               (recur)))))
     om/IRenderState

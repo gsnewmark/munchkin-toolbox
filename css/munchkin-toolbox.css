@@ -14,6 +14,10 @@
   border-width: medium;
 }
 
+.level-progress {
+    height: 35px;
+}
+
 .editable {
   cursor: pointer;
 }

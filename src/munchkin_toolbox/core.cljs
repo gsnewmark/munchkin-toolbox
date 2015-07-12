@@ -40,19 +40,21 @@
       (let [level-changed-c (:level-changed state)]
         (html
          [:div.uk-grid
-          [:div.uk-width-1-10
+          [:div.uk-width-2-10
            [:a
-            {:class "uk-icon-arrow-down uk-text-danger uk-icon-hover uk-icon-small"
+            {:class (str "uk-icon-arrow-down uk-text-danger "
+                         "uk-icon-hover uk-icon-small uk-icon-button")
              :type "button"
              :on-click #(put! level-changed-c ::dec)}]]
-          [:div.uk-width-8-10
-           [:div.uk-progress.uk-progress-warning
+          [:div.uk-width-6-10
+           [:div.level-progress.uk-progress.uk-progress-warning
             [:div {:class "uk-progress-bar"
                    :style {:width (str (* level (/ 100 winning-level)) "%")}}
              [:span.level.uk-text-large level]]]]
-          [:div.uk-width-1-10
+          [:div.uk-width-2-10
            [:a
-            {:class "uk-icon-arrow-up uk-text-success uk-icon-hover uk-icon-small"
+            {:class (str "uk-icon-arrow-up uk-text-success "
+                         "uk-icon-hover uk-icon-small uk-icon-button")
              :type "button"
              :on-click #(put! level-changed-c ::inc)}]]])))))
 
@@ -66,15 +68,20 @@
             strength (max (+ (:level player) (:strength player)) 1)]
         (html
          [:div.uk-grid
-          [:a
-           {:class "uk-width-1-3 uk-icon-minus uk-text-danger uk-icon-hover uk-icon-medium"
-            :type "button"
-            :on-click #(put! strength-changed-c ::dec)}]
-          [:span.strength.uk-width-1-3 strength]
-          [:a
-           {:class "uk-width-1-3 uk-icon-plus uk-text-success uk-icon-hover uk-icon-medium"
-            :type "button"
-            :on-click #(put! strength-changed-c ::inc)}]])))))
+          [:div.uk-width-1-3
+           [:a
+            {:class (str "uk-icon-minus uk-text-danger "
+                         "uk-icon-hover uk-icon-small uk-icon-button")
+             :type "button"
+             :on-click #(put! strength-changed-c ::dec)}]]
+          [:div.uk-width-1-3
+           [:span.strength strength]]
+          [:div.uk-width-1-3
+           [:a
+            {:class (str "uk-icon-plus uk-text-success "
+                         "uk-icon-hover uk-icon-small uk-icon-button")
+             :type "button"
+             :on-click #(put! strength-changed-c ::inc)}]]])))))
 
 (defn editable-label
   [label-key]

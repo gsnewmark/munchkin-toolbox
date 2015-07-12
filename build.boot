@@ -1,6 +1,6 @@
 (task-options!
   pom {:project     'munchkin-toolbox
-       :version     "0.3.3-SNAPSHOT"
+       :version     "0.3.4-SNAPSHOT"
        :description "A set of tools for the Munchkin game"
        :url         "https://gsnewmark.github.io/munchkin-toolbox"
        :scm         {:url "https://github.com/gsnewmark/munchkin-toolbox"}

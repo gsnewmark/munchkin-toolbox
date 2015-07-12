@@ -11,7 +11,8 @@
   "Creates a default description for n-th player."
   {:name (str "Player " n)
    :level 1
-   :strength 0})
+   :strength 0
+   :wins 0})
 
 (def ^:private local-storage-key "players")
 
@@ -19,7 +20,11 @@
   (-> js/localStorage
       (.getItem local-storage-key)
       (#(.parse js/JSON %))
-      (js->clj :keywordize-keys true)))
+      (js->clj :keywordize-keys true)
+      (#(when %
+          (mapv merge (repeatedly (count %) (partial default-player "0")) %)))))
+
+(def ^:private winning-level 10)
 
 (defonce app-state
   (atom
@@ -43,7 +48,7 @@
           [:div.uk-width-8-10
            [:div.uk-progress.uk-progress-warning
             [:div {:class "uk-progress-bar"
-                   :style {:width (str (* level 10) "%")}}
+                   :style {:width (str (* level (/ 100 winning-level)) "%")}}
              [:span.level.uk-text-large level]]]]
           [:div.uk-width-1-10
            [:a
@@ -112,7 +117,7 @@
               (get data label-key "")])))))))
 
 (defmulti change-level identity)
-(defmethod change-level ::inc [op] (fn [l] (if (< l 10) (inc l) l)))
+(defmethod change-level ::inc [op] (fn [l] (if (< l winning-level) (inc l) l)))
 (defmethod change-level ::dec [op] (fn [l] (if (> l 1) (dec l) l)))
 
 (defmulti change-strength identity)
@@ -121,7 +126,7 @@
 
 (defn player-info
   "Card with info about the player."
-  [{:keys [name level] :as player} owner]
+  [{:keys [name level wins] :as player} owner]
   (reify
     om/IInitState
     (init-state [_]
@@ -135,7 +140,17 @@
               (go (loop []
                     (alt!
                       level-changed-c
-                      ([op] (om/transact! player :level (change-level op)))
+                      ([op]
+                       (om/transact!
+                        player
+                        (fn [p]
+                          (let [level ((change-level op) (:level p))]
+                            (-> p
+                                (assoc :level level)
+                                (update-in [:wins]
+                                           (if (>= level winning-level)
+                                             inc
+                                             identity)))))))
                       strength-changed-c
                       ([op] (om/transact! player :strength (change-strength op))))
                     (recur)))))))
@@ -145,8 +160,10 @@
        [:div.uk-width-medium-1-3.uk-width-small-1-2.uk-grid-margin
         [:div.card.uk-panel.uk-panel-box
          [:h3.uk-panel-title
-          (om/build (editable-label :name) player)]
-         (when (>= level 10)
+          (om/build (editable-label :name) player)
+          (when (> wins 0)
+            [:div "Wins: " wins])]
+         (when (>= level winning-level)
            [:div.uk-panel-badge [:i.uk-text-warning.uk-icon-trophy.uk-icon-medium]])
          (om/build level-counter
                    level
@@ -170,8 +187,15 @@
 
 (defn- reset-players
   [players]
-  (let [new-player-data (dissoc (default-player 0) :name)]
+  (let [new-player-data (dissoc (default-player 0) :name :wins)]
     (mapv #(merge % new-player-data) players)))
+
+(defn- save-players [players]
+  (let [players (->> players
+                     reset-players
+                     clj->js
+                     (.stringify js/JSON))]
+    (.setItem js/localStorage local-storage-key players)))
 
 (defn control-panel
   [data owner]
@@ -180,12 +204,14 @@
     (init-state [_]
       {:player-added (chan)
        :player-reset (chan)
+       :wins-reset (chan)
        :player-save (chan)
        :player-load (chan)})
     om/IWillMount
     (will-mount [_]
       (let [player-added-c (om/get-state owner :player-added)
             player-reset-c (om/get-state owner :player-reset)
+            wins-reset-c (om/get-state owner :wins-reset)
             player-save-c (om/get-state owner :player-save)
             player-load-c (om/get-state owner :player-load)]
         (go (loop []
@@ -199,14 +225,13 @@
                 ([op]
                  (om/transact! data :players reset-players))
 
+                wins-reset-c
+                ([op]
+                 (om/transact! data :players
+                               (fn [p] (mapv #(assoc % :wins 0) p))))
+
                 player-save-c
-                ([_]
-                 (let [players (->> @data
-                                    :players
-                                    reset-players
-                                    clj->js
-                                    (.stringify js/JSON))]
-                   (.setItem js/localStorage local-storage-key players)))
+                ([_] (save-players (:players @data)))
 
                 player-load-c
                 ([_]
@@ -217,6 +242,7 @@
     (render-state [_ state]
       (let [player-added-c (:player-added state)
             player-reset-c (:player-reset state)
+            wins-reset-c (:wins-reset state)
             player-save-c (:player-save state)
             player-load-c (:player-load state)]
         (html
@@ -232,6 +258,12 @@
             :type "button"
             :on-click #(put! player-reset-c true)}
            "Reset player stats"]
+          " "
+          [:button
+           {:class "uk-button uk-button-danger"
+            :type "button"
+            :on-click #(put! wins-reset-c true)}
+           "Reset wins"]
           [:div.uk-navbar-flip
            [:button
             {:class "uk-button uk-button-primary"
